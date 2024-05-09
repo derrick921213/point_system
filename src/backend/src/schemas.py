@@ -13,5 +13,6 @@ class UserOut(BaseModel):
     id: int
     username: str
     email: str
+    permission: int
     class Config:
         from_attributes = True

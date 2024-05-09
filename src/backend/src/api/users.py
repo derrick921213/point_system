@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from schemas import UserOut
 from dependencies import get_db
 from models import User
-from core.security import get_password_hash, validate_token
+from core.security import validate_token
 
 router = APIRouter(prefix="/users", tags=["users"])
 

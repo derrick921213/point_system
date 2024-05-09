@@ -16,7 +16,7 @@ async def login_for_access_token(response: Response,form_data: UserLogin, db: Se
     access_token = create_access_token(data={"sub": user.username,"user_id": user.id})
     response.set_cookie(key=Config.cookie_name, value=access_token, max_age=1800, domain=Config.domain_env, path="/", httponly=True, secure=False, samesite='Lax')
     # return {"access_token": access_token, "token_type": "bearer"}
-    return {"message": "Login successful."}
+    return {"message": "Login successful.","is_logged_in": True}
 
 @router.post("/register/")
 def register_user(Userdata: UserCreate, db: Session = Depends(get_db)):
@@ -40,4 +40,4 @@ async def logoutWithAccess(response: Response,user: User = Depends(validate_toke
 
 @router.get("/isLogin/")
 async def isLogin(user: User = Depends(validate_token)):
-    return {"message": f"{user.username}"}
+    return {"message": f"{user.username}","is_logged_in": True}

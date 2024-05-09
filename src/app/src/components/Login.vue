@@ -58,6 +58,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, getCurrentInstance } from "vue";
 import axios from "axios";
+import { useRouter } from 'vue-router';
 // import Swal from "sweetalert2";
 const username = ref("");
 const password = ref("");
@@ -65,34 +66,31 @@ const signupName = ref("");
 const signupEmail = ref("");
 const signupPassword = ref("");
 const containerClass = ref("");
+const router = useRouter();
 async function login() {
   if (username.value.length < 3 || password.value.length < 8) {
     alert("Username or password is too short!")
     return;
   }
   try {
-    const respone = await axios.post(
+    const response = await axios.post(
       "http://localhost:8000/auth/login",
       { username: username.value, password: password.value },
       { withCredentials: true }
     );
-    console.log("Response:", respone.data.message);
+    username.value = "";
+    password.value = "";
+    console.log("Response:", response.data.message);
+    if (response.data.is_logged_in) {
+      router.push({ name: 'editor' });
+    } else {
+      alert('登录失败，请检查您的用户名和密码。');
+    }
   } catch (error) {
     // console.error("JS Error:", error.response.data);
     if (error.response) {
-      // Vue.swal('Hello Vue world!!!');
-      //   Swal.fire({
-      //     icon: "error",
-      //     title: "Oops...",
-      //     text: error.response.data.detail,
-      //   });
       console.log(error.response.data.detail);
     } else {
-      //   Swal.fire({
-      //     icon: "error",
-      //     title: "Oops...",
-      //     text: "錯誤: " + error.message,
-      //   });
       console.error("錯誤: " + error.message);
     }
   }
@@ -113,6 +111,9 @@ async function signup() {
       },
       { withCredentials: true }
     );
+    signupName.value = "";
+    signupPassword.value = "";
+    signupEmail.value = "";
     console.log("Response:", response.data.message);
     // instance.proxy.$swal({
     //   position: "center",
@@ -121,25 +122,25 @@ async function signup() {
     //   showConfirmButton: false,
     // });
   } catch (error) {
-    // console.error("JS Error:", error);
-    if (error.response) {
-      error.response.data.detail.forEach((msg) => {
-        console.error(msg.loc[1] + " " + msg.msg);
-        // Swal.fire({
-        //   position: "center",
-        //   icon: "error",
-        //   title: "Oops...",
-        //   text: msg.loc[1] + " " + msg.msg,
-        // });
-      });
-    } else {
-      //   Swal.fire({
-      //     icon: "error",
-      //     title: "Oops...",
-      //     text: "錯誤: " + error.message,
-      //   });
-      console.error("錯誤: " + error.message);
-    }
+    console.error("JS Error:", error);
+    // if (error.response) {
+    //   error.response.data.detail.forEach((msg) => {
+    //     console.error(msg.loc[1] + " " + msg.msg);
+    //     // Swal.fire({
+    //     //   position: "center",
+    //     //   icon: "error",
+    //     //   title: "Oops...",
+    //     //   text: msg.loc[1] + " " + msg.msg,
+    //     // });
+    //   });
+    // } else {
+    //   //   Swal.fire({
+    //   //     icon: "error",
+    //   //     title: "Oops...",
+    //   //     text: "錯誤: " + error.message,
+    //   //   });
+    //   console.error("錯誤: " + error.message);
+    // }
   }
 }
 

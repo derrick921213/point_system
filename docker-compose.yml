@@ -8,6 +8,8 @@ services:
       - db
     env_file: 
       - .env
+    volumes:
+      - ./src/backend/markdown:/app/markdown
     develop:
       watch:
         - action: sync

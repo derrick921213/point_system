@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse, RedirectResponse
 from api.router import router as api_router
 from config import Config
 from database import init_db
@@ -12,4 +13,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 init_db()
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    if exc.status_code == 402:
+        return RedirectResponse(url="/logout/")
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"message": str(exc.detail)},
+    )
 app.include_router(api_router)

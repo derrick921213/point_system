@@ -39,9 +39,9 @@ def validate_token(token: str = Depends(get_token_from_cookie),db: Session = Dep
         user_name: str = payload.get("sub")
         user_id: int = payload.get("user_id")
         if user_name is None or user_id is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
+            raise HTTPException(status_code=402, detail="Invalid token")
         user = db.query(User).filter(User.id == user_id,User.username == user_name).first()
         return user 
     except JWTError as e:
         # raise HTTPException(status_code=401, detail=e.__repr__())
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=402, detail="Invalid token")

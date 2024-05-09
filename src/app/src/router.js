@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from "vue-router";
+import axios from 'axios';
 import HomeView from "@/views/HomeView.vue";
 import LoginView from "@/views/LoginView.vue";
+import MarkdownEditorView from "@/views/MarkdownEditorView.vue";
 
 const router = createRouter({
   history: createWebHistory(), // 使用 HTML5 History 模式
@@ -16,6 +18,24 @@ const router = createRouter({
       name: "login",
       component: LoginView,
       meta: { title: '登入' },
+    },
+    {
+      path: "/editor",
+      name: "editor",
+      component: MarkdownEditorView,
+      meta: { title: 'MarkDown 編輯器' },
+      beforeEnter: async (to, from, next) => {
+        try {
+          const response = await axios.get('http://localhost:8000/auth/isLogin',{ withCredentials: true });
+          if (response.data.is_logged_in) {
+            next();
+          } else {
+            next({ name: 'login' });
+          }
+        } catch (error) {
+          next({ name: 'login' });
+        }
+      },
     },
   ],
 });
