@@ -9,13 +9,17 @@
           <a href="#" class="social"><i class="fab fa-linkedin-in"></i></a>
         </div>
         <span>or use your email for registration</span>
-        <input type="text" placeholder="Name" v-model="signupName" />
-        <input type="email" placeholder="Email" v-model="signupEmail" />
+        <input
+          type="text"
+          placeholder="Username(至少 3 個字母)"
+          v-model="signupName"
+        />
         <input
           type="password"
-          placeholder="Password"
+          placeholder="Password(至少 8 個字母)"
           v-model="signupPassword"
         />
+        <input type="email" placeholder="Email" v-model="signupEmail" />
         <button>Sign Up</button>
       </form>
     </div>
@@ -28,7 +32,7 @@
           <a href="#" class="social"><i class="fab fa-linkedin-in"></i></a>
         </div>
         <span>or use your account</span>
-        <input placeholder="Username" v-model="username" />
+        <input type="text" placeholder="Username" v-model="username" />
         <input type="password" placeholder="Password" v-model="password" />
         <a href="#">Forgot your password?</a>
         <button>Log In</button>
@@ -52,30 +56,92 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted, getCurrentInstance } from "vue";
 import axios from "axios";
-
+// import Swal from "sweetalert2";
 const username = ref("");
 const password = ref("");
 const signupName = ref("");
 const signupEmail = ref("");
 const signupPassword = ref("");
 const containerClass = ref("");
+async function login() {
+  if (username.value.length < 3 || password.value.length < 8) {
+    alert("Username or password is too short!")
+    return;
+  }
+  try {
+    const respone = await axios.post(
+      "http://localhost:8000/auth/login",
+      { username: username.value, password: password.value },
+      { withCredentials: true }
+    );
+    console.log("Response:", respone.data.message);
+  } catch (error) {
+    // console.error("JS Error:", error.response.data);
+    if (error.response) {
+      // Vue.swal('Hello Vue world!!!');
+      //   Swal.fire({
+      //     icon: "error",
+      //     title: "Oops...",
+      //     text: error.response.data.detail,
+      //   });
+      console.log(error.response.data.detail);
+    } else {
+      //   Swal.fire({
+      //     icon: "error",
+      //     title: "Oops...",
+      //     text: "錯誤: " + error.message,
+      //   });
+      console.error("錯誤: " + error.message);
+    }
+  }
+}
 
-const login = () => {
-  console.log("Logging in:", username.value, password.value);
-  // 登录逻辑
-};
-
-const signup = () => {
-  console.log(
-    "Signing up:",
-    signupName.value,
-    signupEmail.value,
-    signupPassword.value
-  );
-  // 注册逻辑
-};
+async function signup() {
+  if (signupName.value.length < 3 || signupPassword.value.length < 8) {
+    alert("Username or password is too short!")
+    return;
+  }
+  try {
+    const response = await axios.post(
+      "http://localhost:8000/auth/register/",
+      {
+        username: signupName.value,
+        password: signupPassword.value,
+        email: signupEmail.value,
+      },
+      { withCredentials: true }
+    );
+    console.log("Response:", response.data.message);
+    // instance.proxy.$swal({
+    //   position: "center",
+    //   icon: "success",
+    //   title: response.data.message,
+    //   showConfirmButton: false,
+    // });
+  } catch (error) {
+    // console.error("JS Error:", error);
+    if (error.response) {
+      error.response.data.detail.forEach((msg) => {
+        console.error(msg.loc[1] + " " + msg.msg);
+        // Swal.fire({
+        //   position: "center",
+        //   icon: "error",
+        //   title: "Oops...",
+        //   text: msg.loc[1] + " " + msg.msg,
+        // });
+      });
+    } else {
+      //   Swal.fire({
+      //     icon: "error",
+      //     title: "Oops...",
+      //     text: "錯誤: " + error.message,
+      //   });
+      console.error("錯誤: " + error.message);
+    }
+  }
+}
 
 const showSignup = () => {
   containerClass.value = "right-panel-active";

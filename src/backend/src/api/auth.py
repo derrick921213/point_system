@@ -5,6 +5,7 @@ from dependencies import get_db
 from core.security import create_access_token, validate_token, verify_password,pwd_context
 from models import User
 from config import Config
+from sqlalchemy.exc import IntegrityError
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/login/")
@@ -24,9 +25,12 @@ def register_user(Userdata: UserCreate, db: Session = Depends(get_db)):
     db.add(user)
     try:
         db.commit()
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="用戶名或郵件已存在。")
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=500, detail="內部伺服器錯誤。")
     return {"message": "User created successfully."}
 
 @router.post("/logout/")
