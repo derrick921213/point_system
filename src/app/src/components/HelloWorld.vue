@@ -1,11 +1,21 @@
 <script setup>
-import { ref } from 'vue'
-
+import { ref , onMounted,onUnmounted} from 'vue'
 defineProps({
   msg: String,
 })
-
-const count = ref(0)
+const count = ref(0);
+let styleLink;
+onMounted(() => {
+  styleLink = document.createElement("link");
+  styleLink.rel = "stylesheet";
+  styleLink.href = "/styles/style.css";
+  document.head.appendChild(styleLink);
+});
+onUnmounted(() => {
+  if (styleLink) {
+    document.head.removeChild(styleLink);
+  }
+});
 </script>
 
 <template>
@@ -32,9 +42,3 @@ const count = ref(0)
   </p>
   <p class="read-the-docs">Click on the Vite and Vue logos to learn more</p>
 </template>
-
-<style scoped>
-.read-the-docs {
-  color: #888;
-}
-</style>

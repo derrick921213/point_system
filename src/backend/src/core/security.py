@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta,timezone
-from fastapi import Depends, HTTPException, Security
+from fastapi import Depends, HTTPException, Request, Security
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from dependencies import get_db
@@ -27,14 +27,20 @@ def verify_password(plain_password, hashed_password):
 def get_password_hash(password):
     return pwd_context.hash(password)
 
-def validate_token(token: str = Security(oauth2_scheme),db: Session = Depends(get_db)):
+def get_token_from_cookie(request: Request):
+    token = request.cookies.get(Config.cookie_name)
+    if not token:
+        raise HTTPException(status_code=401, detail="No token provided")
+    return token
+
+def validate_token(token: str = Depends(get_token_from_cookie),db: Session = Depends(get_db)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_name: str = payload.get("sub")
         user_id: int = payload.get("user_id")
         if user_name is None or user_id is None:
             raise HTTPException(status_code=401, detail="Invalid token")
-        user = db.query(User).filter(User.id == user_id and User.username == user_name).first()
+        user = db.query(User).filter(User.id == user_id,User.username == user_name).first()
         return user 
     except JWTError as e:
         # raise HTTPException(status_code=401, detail=e.__repr__())
