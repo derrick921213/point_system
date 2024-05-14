@@ -3,6 +3,7 @@ import axios from 'axios';
 import HomeView from "@/views/HomeView.vue";
 import LoginView from "@/views/LoginView.vue";
 import MarkdownEditorView from "@/views/MarkdownEditorView.vue";
+import NotFound from '@/views/NotFound.vue'
 
 const router = createRouter({
   history: createWebHistory(), // 使用 HTML5 History 模式
@@ -18,6 +19,11 @@ const router = createRouter({
       name: "login",
       component: LoginView,
       meta: { title: '登入' },
+    },
+    {
+      path: '/:catchAll(.*)',  // 捕获所有未匹配的路由
+      name: 'NotFound',
+      component: NotFound
     },
     {
       path: "/editor",
