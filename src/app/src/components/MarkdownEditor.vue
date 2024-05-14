@@ -14,33 +14,38 @@
       <div class="preview-pane" v-html="htmlContent"></div>
     </div>
     <div class="controls">
-      <input
+      <!-- <input
         type="text"
         v-model="loadFilename"
         placeholder="Enter filename to load.md"
-      />
-      <button @click="loadMarkdown">加載Markdown</button>
+      /> -->
+      <!-- <button @click="loadMarkdown(loadFilename.value)">加載Markdown</button> -->
+      <button @click="ButtonCliecked('load')">加載Markdown</button>
+      <input v-if="saveFilename" type="text" v-model="saveFilename" />
       <input
+        v-else="saveFilename"
         type="text"
         v-model="saveFilename"
         placeholder="Enter filename to save.md"
       />
+
       <button @click="saveMarkdown">保存Markdown</button>
       <Logout />
     </div>
   </div>
 </template>
-
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import axios from "axios";
 import MarkdownIt from "markdown-it";
 import Logout from "./Logout.vue";
 import StyleManager from "@/styleManager";
 import hljs from "highlight.js";
-import 'highlight.js/styles/github-dark.css'
+import "highlight.js/styles/github-dark.css";
+import ClipboardJS from "clipboard";
 
 const styleManager = StyleManager;
+const emit = defineEmits(["buttonClicked"]);
 const md = new MarkdownIt({
   html: true,
   linkify: true,
@@ -49,26 +54,46 @@ const md = new MarkdownIt({
   highlight: function (str, lang) {
     if (lang && hljs.getLanguage(lang)) {
       try {
-        return (
-          '<pre class="hljs language-' +
-          lang.toLowerCase() +
-          '"><code>' +
-          hljs.highlight(str, { language: lang, ignoreIllegals: true }).value +
-          "</code></pre>"
-        );
+        const highlighted = hljs.highlight(str, {
+          language: lang,
+          ignoreIllegals: true,
+        }).value;
+        return `<pre class="hljs language-${lang.toLowerCase()}"><code>${highlighted}</code><button class="copy-btn">Copy</button></pre>`;
       } catch (__) {}
     }
-    return '<pre><code class="hljs">' + str + "</code></pre>";
+    return `<pre class="hljs"><code class="hljs">${str}</code><button class="copy-btn">Copy</button></pre>`;
   },
 });
 const markdown = ref("");
+const old_markdown = ref("");
 const loadFilename = ref("");
 const saveFilename = ref("");
 const htmlContent = computed(() => md.render(markdown.value));
-// styleManager.setStyle(document.body, {
-//   margin: "0",
-//   "font-family": "Arial, sans-serif",
-// });
+const props = defineProps({
+  file: {
+    type: String,
+    required: true,
+  },
+});
+onMounted(() => {
+  if (props.file) {
+    const newFile = props.file;
+    console.log("Loading markdown for file:", newFile);
+    loadMarkdown(newFile);
+    saveFilename.value = newFile;
+  }
+  const clipboard = new ClipboardJS(".copy-btn", {
+    target: (trigger) => {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on("success", function (e) {
+    e.clearSelection();
+  });
+  clipboard.on("error", function (e) {
+    alert("Failed to copy");
+  });
+});
 function validateFilename(filename) {
   if (!filename.endsWith(".md")) {
     alert('Filename must end with ".md"');
@@ -88,15 +113,16 @@ function handleTab(event) {
     markdown.value = textarea.value;
   }
 }
-async function loadMarkdown() {
-  if (!validateFilename(loadFilename.value)) return;
+async function loadMarkdown(filename) {
+  if (!validateFilename(filename)) return;
   try {
     const response = await axios.get(
-      `http://localhost:8000/files/markdown/${loadFilename.value}`,
+      `http://localhost:8000/files/markdown/${filename}`,
       { withCredentials: true }
     );
     console.log(response.data);
     markdown.value = response.data;
+    old_markdown.value = response.data;
   } catch (error) {
     console.error("Failed to load markdown:", error);
     alert("Failed to load markdown: " + error.message);
@@ -121,6 +147,7 @@ async function saveMarkdown() {
     );
     if (response.status === 200) {
       alert("File saved successfully");
+      ButtonCliecked("save");
     }
   } catch (error) {
     if (error.response && error.response.status === 400) {
@@ -131,6 +158,15 @@ async function saveMarkdown() {
     }
   }
 }
+const ButtonCliecked = (btn) => {
+  console.log("Button selected:", btn);
+  if (markdown.value !== old_markdown.value) {
+    if (!confirm("放棄修改?")) {
+      return;
+    }
+  }
+  emit("buttonClicked", btn);
+};
 </script>
 
 <style scoped>
@@ -178,15 +214,6 @@ textarea {
   -moz-tab-size: 4;
   -o-tab-size: 4;
 }
-::v-deep pre {
-  padding: 9.5px;
-}
-::v-deep pre code {
-  white-space: pre;
-  tab-size: 4;
-  -moz-tab-size: 4;
-  -o-tab-size: 4;
-}
 .preview-pane {
   flex: 1;
   padding: 1em;
@@ -196,49 +223,76 @@ textarea {
   word-break: break-word;
   overflow: auto;
 }
+:deep(pre) {
+  display: flex;
+  align-items: center;
+  padding: 9.5px;
+  position: relative;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+:deep(pre code) {
+  white-space: pre-wrap;
+  tab-size: 4;
+  -moz-tab-size: 4;
+  -o-tab-size: 4;
+  flex-grow: 1;
+}
 
-::v-deep .preview-pane ul {
+:deep(pre .copy-btn) {
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  padding: 2px 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-left: 10px;
+  align-self: flex-start;
+}
+:deep(pre .copy-btn:hover) {
+  background: #45a049;
+}
+:deep(.preview-pane ul) {
   margin: 0;
   padding-left: 40px;
-  /* list-style: none; */
 }
-::v-deep .preview-pane ol {
+:deep(.preview-pane ol) {
   margin: 0;
   padding-left: 40px;
-  /* list-style: none; */
 }
 
-::v-deep .preview-pane ul li {
+:deep(.preview-pane ul li) {
   position: relative;
   margin-bottom: 2.5px;
   word-wrap: break-word;
   margin-left: 0px;
 }
 
-::v-deep .preview-pane ul li ::marker {
+:deep(.preview-pane ul li ::marker) {
   color: #000;
   font-size: 1em;
   line-height: 1;
 }
-::v-deep .preview-pane ol li {
+:deep(.preview-pane ol li) {
   position: relative;
   margin-bottom: 2.5px;
   word-wrap: break-word;
   margin-left: 0px;
 }
 
-::v-deep .preview-pane ol li ::marker {
+:deep(.preview-pane ol li ::marker) {
   color: #000;
   font-size: 1em;
   line-height: 1;
 }
 
-::v-deep .preview-pane h1,
-::v-deep .preview-pane h2,
-::v-deep .preview-pane h3,
-::v-deep .preview-pane h4,
-::v-deep .preview-pane h5,
-::v-deep .preview-pane h6 {
+:deep(.preview-pane h1),
+:deep(.preview-pane h2),
+:deep(.preview-pane h3),
+:deep(.preview-pane h4),
+:deep(.preview-pane h5),
+:deep(.preview-pane h6) {
   margin: 0;
   padding: 0;
 }

@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends,HTTPException, Path, Response, UploadFile, File
+from os import listdir
+from fastapi import APIRouter, Depends,HTTPException, Path, UploadFile, File
 from core.utils import validate_filename
 from fastapi.responses import FileResponse
 from models import User
@@ -21,9 +22,18 @@ async def update_markdown(filename: str = Path(...), file: UploadFile = File(...
     validate_filename(filename)
     if user.permission != 1:
         raise HTTPException(status_code=403, detail="Permission denied")
-    # if exists(file_path):
-    #     return Response(status_code=400, content="Filename already exists. Please choose another name.")
     file_path = f'markdown/{filename}'
     with open(file_path, "wb") as buffer:
         buffer.write(await file.read())
     return {"message": "File updated successfully"}
+
+@router.get("/")
+async def get_files_lists(user: User = Depends(validate_token)):
+    if user.permission != 1:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    dirpaths = f'markdown';
+    try:
+        files = listdir(dirpaths)
+        return {'files': files}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
