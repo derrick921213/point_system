@@ -15,7 +15,7 @@ import MarkdownList from "@/components/MarkdownList.vue";
 const selectedFile = ref("");
 
 const handleFileSelected = (file) => {
-  console.log("File selected in parent:", file); // 添加日志输出
+//   console.log("File selected in parent:", file); // 添加日志输出
   selectedFile.value = file;
 };
 const handleButtonClicked = (btn) => {

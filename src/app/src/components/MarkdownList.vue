@@ -31,7 +31,7 @@
   };
   
   const selectFile = (file) => {
-    console.log("File selected:", file);
+    // console.log("File selected:", file);
     emit("fileSelected", file);
   };
   

@@ -78,7 +78,7 @@ const props = defineProps({
 onMounted(() => {
   if (props.file) {
     const newFile = props.file;
-    console.log("Loading markdown for file:", newFile);
+    // console.log("Loading markdown for file:", newFile);
     loadMarkdown(newFile);
     saveFilename.value = newFile;
   }
@@ -120,7 +120,7 @@ async function loadMarkdown(filename) {
       `http://localhost:8000/files/markdown/${filename}`,
       { withCredentials: true }
     );
-    console.log(response.data);
+    // console.log(response.data);
     markdown.value = response.data;
     old_markdown.value = response.data;
   } catch (error) {
@@ -159,7 +159,7 @@ async function saveMarkdown() {
   }
 }
 const ButtonCliecked = (btn) => {
-  console.log("Button selected:", btn);
+  // console.log("Button selected:", btn);
   if (markdown.value !== old_markdown.value) {
     if (!confirm("放棄修改?")) {
       return;
