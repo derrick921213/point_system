@@ -1,21 +1,29 @@
 <template>
-  <div>
-    <h2>Markdown 編輯器</h2>
-    <input
-      type="text"
-      v-model="loadFilename"
-      placeholder="Enter filename to load.md"
-    />
-    <button @click="loadMarkdown">加載Markdown</button>
-    <textarea v-model="markdown" @input="updatePreview"></textarea>
-    <div v-html="htmlContent" class="markdown-preview"></div>
-    <input
-      type="text"
-      v-model="saveFilename"
-      placeholder="Enter filename to save.md"
-    />
-    <button @click="saveMarkdown">保存Markdown</button>
-    <Logout />
+  <div class="editor-container">
+    <header>
+      <h2>Markdown 編輯器</h2>
+    </header>
+    <div class="editor">
+      <div class="editor-pane">
+        <textarea v-model="markdown"></textarea>
+      </div>
+      <div class="preview-pane" v-html="htmlContent"></div>
+    </div>
+    <div class="controls">
+      <input
+        type="text"
+        v-model="loadFilename"
+        placeholder="Enter filename to load.md"
+      />
+      <button @click="loadMarkdown">加載Markdown</button>
+      <input
+        type="text"
+        v-model="saveFilename"
+        placeholder="Enter filename to save.md"
+      />
+      <button @click="saveMarkdown">保存Markdown</button>
+      <Logout />
+    </div>
   </div>
 </template>
 
@@ -24,13 +32,18 @@ import { ref, computed } from "vue";
 import axios from "axios";
 import MarkdownIt from "markdown-it";
 import Logout from "./Logout.vue";
+import StyleManager from "@/styleManager";
 
+const styleManager = StyleManager;
 const md = new MarkdownIt();
 const markdown = ref("");
 const loadFilename = ref("");
 const saveFilename = ref("");
 const htmlContent = computed(() => md.render(markdown.value));
-
+// styleManager.setStyle(document.body, {
+//   margin: "0",
+//   "font-family": "Arial, sans-serif",
+// });
 function validateFilename(filename) {
   if (!filename.endsWith(".md")) {
     alert('Filename must end with ".md"');
@@ -41,7 +54,6 @@ function validateFilename(filename) {
 
 async function loadMarkdown() {
   if (!validateFilename(loadFilename.value)) return;
-
   try {
     const response = await axios.get(
       `http://localhost:8000/files/markdown/${loadFilename.value}`,
@@ -49,7 +61,6 @@ async function loadMarkdown() {
     );
     console.log(response.data);
     markdown.value = response.data;
-    // updatePreview(); // Ensure the preview is updated when new markdown is loaded
   } catch (error) {
     console.error("Failed to load markdown:", error);
     alert("Failed to load markdown: " + error.message);
@@ -70,7 +81,7 @@ async function saveMarkdown() {
     const response = await axios.put(
       `http://localhost:8000/files/markdown/${saveFilename.value}`,
       formData,
-      { withCredentials: true },
+      { withCredentials: true }
     );
     if (response.status === 200) {
       alert("File saved successfully");
@@ -84,25 +95,79 @@ async function saveMarkdown() {
     }
   }
 }
-
-// function updatePreview() {
-//   // 此函数只需存在即可，实际的 HTML 内容更新是由计算属性 htmlContent 自动处理的
-// }
 </script>
 
 <style scoped>
-textarea,
-input[type="text"] {
+.editor-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+header {
+  background-color: #24292e;
+  color: white;
+  padding: 1em;
+  text-align: center;
+}
+
+.editor {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.editor-pane,
+.preview-pane {
+  flex: 1;
+  padding: 1em;
+  box-sizing: border-box;
+  overflow: auto;
+}
+
+.editor-pane {
+  background-color: #2d2d2d;
+  color: white;
+}
+
+textarea {
   width: 100%;
-  height: 2.5em;
-  margin-bottom: 10px;
+  height: 100%;
+  border: none;
+  resize: none;
+  background-color: transparent;
+  color: white;
+  font-family: monospace;
+  font-size: 16px;
+  outline: none;
 }
-.markdown-preview {
-  border: 1px solid #ccc;
-  padding: 10px;
-  background-color: #f8f8f8;
+
+.preview-pane {
+  background-color: white;
+  border-left: 1px solid #ccc;
 }
+
+.controls {
+  padding: 1em;
+  background-color: #f5f5f5;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+input[type="text"] {
+  flex: 1;
+  padding: 0.5em;
+  font-size: 16px;
+}
+
 button {
-  margin-right: 10px;
+  padding: 0.5em 1em;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
 }
 </style>
